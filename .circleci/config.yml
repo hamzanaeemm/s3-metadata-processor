@@ -1,0 +1,64 @@
+version: 2.1
+orbs:
+  aws-cli: circleci/aws-cli@5.1.0
+
+executors:
+  node:
+    docker:
+      - image: cimg/node:22.7
+
+jobs:
+  build_lambda:
+    executor: node
+    working_directory: ~/project
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package-lock.json" }}
+            - v1-dependencies-
+      - run:
+          name: Install dependencies
+          command: npm ci
+      - run:
+          name: Build Lambda package
+          command: make build-lambda
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package-lock.json" }}
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - infrastructure/terraform/lambda
+
+  deploy_lambda:
+    executor: node
+    working_directory: ~/project
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - aws-cli/setup:
+          aws-region: AWS_DEFAULT_REGION
+      - run:
+          name: Deploy Lambda function
+          command: |
+            if [ -z "$LAMBDA_FUNCTION_NAME" ]; then
+              echo "ERROR: LAMBDA_FUNCTION_NAME environment variable is required."
+              exit 1
+            fi
+
+            aws lambda update-function-code \
+              --function-name "$LAMBDA_FUNCTION_NAME" \
+              --zip-file "fileb://infrastructure/terraform/lambda/s3-file-processor-lambda.zip" \
+              --publish
+
+workflows:
+  build_and_deploy:
+    jobs:
+      - build_lambda
+      - deploy_lambda:
+          requires:
+            - build_lambda
+          context:
+            - s3-secrets-context

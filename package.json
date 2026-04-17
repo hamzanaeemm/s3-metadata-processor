@@ -1,0 +1,25 @@
+{
+    "name": "s3-metadata-processor",
+    "version": "0.2.0",
+    "description": "AWS Lambda + S3 + DynamoDB integration for file metadata processing",
+    "private": true,
+    "type": "commonjs",
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "dependencies": {
+        "@aws-sdk/client-dynamodb": "^3.621.0",
+        "@aws-sdk/client-s3": "^3.621.0"
+    },
+    "devDependencies": {
+        "eslint": "^8.57.0",
+        "eslint-config-prettier": "^9.1.0",
+        "prettier": "^3.3.0"
+    },
+    "scripts": {
+        "lint": "eslint src/",
+        "lint:fix": "eslint src/ --fix",
+        "format": "prettier --write \"src/**/*.js\"",
+        "format:check": "prettier --check \"src/**/*.js\""
+    }
+}

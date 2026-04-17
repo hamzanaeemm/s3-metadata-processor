@@ -1,0 +1,4 @@
+projects:
+  - dir: infrastructure/terraform
+    var_file: dev.tfvars
+    tool: terrastate
